@@ -1,4 +1,4 @@
-# Gerador de QBR — Effecti
+# Gerador de QBR
 
 Aplicação local (roda 100% no navegador, sem instalar nada e sem internet) que gera o
 relatório de resultados (QBR) **replicando o modelo oficial da Effecti**: as páginas
