@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de QBR — Effecti</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">effecti</span>
+      <span class="brand-sub">Gerador de QBR</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="btnLimpar" class="btn ghost" type="button">Limpar</button>
+      <button id="btnGerar" class="btn" type="button">Gerar prévia</button>
+      <div class="dl-group">
+        <button id="btnPdf" class="btn primary" type="button" disabled>Baixar PDF</button>
+        <button id="btnPptx" class="btn primary" type="button" disabled>Baixar PowerPoint</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ================= PAINEL DE ENTRADA ================= -->
+    <section class="panel" aria-label="Dados do QBR">
+      <h2 class="panel-title">Dados do relatório</h2>
+
+      <div class="field">
+        <label for="cliente">Nome do cliente</label>
+        <input id="cliente" type="text" placeholder="Ex.: CIRION TECHNOLOGIES DO BRASIL LTDA" />
+      </div>
+
+      <div class="field">
+        <label for="periodoInicio">Período — início</label>
+        <input id="periodoInicio" type="month" />
+      </div>
+
+      <div class="field">
+        <label for="periodoFim">Período — fim</label>
+        <input id="periodoFim" type="month" />
+      </div>
+
+      <div class="field">
+        <label for="mensalidade">Mensalidade (R$)</label>
+        <div class="inline">
+          <input id="mensalidade" type="text" inputmode="decimal" placeholder="Ex.: 3.336,03" />
+          <button id="btnBuscarMensalidade" class="btn ghost small" type="button" title="Preencher a partir do CSV de Customer Success pelo nome do cliente">Buscar no CS</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="roiMeses">Período do investimento (ROI)</label>
+        <select id="roiMeses">
+          <option value="3" selected>Trimestre (3 meses)</option>
+          <option value="4">4 meses</option>
+          <option value="5">5 meses</option>
+          <option value="6">Semestre (6 meses)</option>
+        </select>
+        <small class="hint">Investimento = mensalidade × meses selecionados. ROI = Valor Arrematado ÷ investimento (como no modelo). Abaixo de 20% a página de ROI recebe um aviso na prévia, mas continua marcada — o operador decide remover no seletor.</small>
+      </div>
+
+      <hr class="sep" />
+
+      <div class="field">
+        <label for="csvDisputa">CSV de disputas (opcional)</label>
+        <input id="csvDisputa" type="file" accept=".csv" />
+        <small class="hint">Arquivo <code>dispute_web_*.csv</code> (Valor Total Vencidos, Diferença Valor Mínimo). <b>Deixe em branco</b> se o cliente não usa o robô (compliance) — nesse caso as páginas de arremate, economia e ROI são omitidas.</small>
+        <div id="csvDisputaInfo" class="file-info"></div>
+      </div>
+
+      <div class="field">
+        <label for="dadosColados">…ou cole a tabela do sistema interno</label>
+        <textarea id="dadosColados" rows="5" placeholder="Cole aqui (Ctrl+V) as linhas copiadas da tabela de disputas do sistema"></textarea>
+        <div class="inline" style="margin-top:6px">
+          <button id="btnProcessarColado" class="btn ghost small" type="button">Processar dados colados</button>
+        </div>
+        <small class="hint">Este formato tem data por disputa — o período informado acima é aplicado como filtro automaticamente. Também opcional: sem dados colados/CSV, o QBR segue sem as páginas do robô.</small>
+        <div id="coladoInfo" class="file-info"></div>
+      </div>
+
+      <div class="field">
+        <label for="csvCs">CSV de Customer Success (opcional)</label>
+        <input id="csvCs" type="file" accept=".csv" />
+        <small class="hint">Usado só para autopreencher a mensalidade pelo nome do cliente.</small>
+        <div id="csvCsInfo" class="file-info"></div>
+      </div>
+
+      <hr class="sep" />
+
+      <div class="field">
+        <label>Health Score — Percentual de Usabilidade</label>
+        <div id="healthPaste" class="paste-zone" tabindex="0">
+          <span id="pasteMsg">Clique aqui e cole (Ctrl+V) o print do Health Score,<br />ou arraste a imagem / clique para escolher</span>
+          <input id="healthPrint" type="file" accept="image/*" hidden />
+        </div>
+        <small class="hint">Cole o print e o app <b>lê os 4 percentuais automaticamente</b> (OCR) e preenche os campos abaixo — as bolinhas do PDF são desenhadas conforme o modelo. Se algum vier errado, é só ajustar manualmente.</small>
+        <div id="healthPreview" class="thumb"></div>
+      </div>
+
+      <div class="field-row four">
+        <div class="field"><label for="pctEncontrar">Encontrar %</label><input id="pctEncontrar" type="number" min="0" max="100" placeholder="83" /></div>
+        <div class="field"><label for="pctCadastrar">Cadastrar %</label><input id="pctCadastrar" type="number" min="0" max="100" placeholder="100" /></div>
+        <div class="field"><label for="pctDisputar">Disputar %</label><input id="pctDisputar" type="number" min="0" max="100" placeholder="99" /></div>
+        <div class="field"><label for="pctMonitorar">Monitorar %</label><input id="pctMonitorar" type="number" min="0" max="100" placeholder="99" /></div>
+      </div>
+
+      <hr class="sep" />
+
+      <div class="field">
+        <label>Como a Effecti te ajudou (números do período)</label>
+      </div>
+      <div class="field-row four">
+        <div class="field"><label for="numCapturadas">Capturadas</label><input id="numCapturadas" type="text" inputmode="numeric" placeholder="46.005" /></div>
+        <div class="field"><label for="numCadastradas">Cadastradas</label><input id="numCadastradas" type="text" inputmode="numeric" placeholder="505" /></div>
+        <div class="field"><label for="numDisputadas">Disputadas</label><input id="numDisputadas" type="text" inputmode="numeric" placeholder="845" /></div>
+        <div class="field"><label for="numMonitoradas">Monitoradas</label><input id="numMonitoradas" type="text" inputmode="numeric" placeholder="1.496" /></div>
+      </div>
+
+      <div class="field">
+        <label for="emailGerente">E-mail do Gerente de Relacionamento (página de contatos)</label>
+        <input id="emailGerente" type="text" placeholder="antonio.oliveira@effecti.com.br" />
+      </div>
+
+      <hr class="sep" />
+
+      <div class="field">
+        <label>Páginas institucionais</label>
+        <label class="check"><input id="incluirInstitucional" type="checkbox" checked /> Incluir todas as páginas (capa, guias e contatos). Desmarque para gerar só as páginas de dados.</label>
+      </div>
+
+      <div class="field" hidden>
+        <label>Slides de encerramento (diversão)</label>
+        <label class="check"><input id="incluirFun" type="checkbox" /> Adicionar os slides de brincadeira no fim. Na prévia dá para escolher quais entram.</label>
+      </div>
+
+      <div id="metrics" class="metrics" hidden>
+        <h3>Resumo calculado</h3>
+        <ul id="metricsList"></ul>
+      </div>
+    </section>
+
+    <!-- ================= PRÉVIA ================= -->
+    <section class="preview" aria-label="Prévia">
+      <div id="deck" class="deck"></div>
+      <div id="emptyState" class="empty">
+        <p>Preencha os dados e clique em <strong>Gerar prévia</strong>.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <div id="exportOverlay" class="export-overlay" hidden>
+    <div class="export-panel">
+      <h3 id="exportTitle">Gerando PDF…</h3>
+      <p id="exportStatus">Página 1 de 15</p>
+      <div class="export-bar" aria-hidden="true"><div id="exportBarFill"></div></div>
+      <small id="exportHint">Pode minimizar ou trocar de janela; a exportação continua.</small>
+    </div>
+  </div>
+
+  <script src="vendor/papaparse.min.js"></script>
+  <script src="vendor/html2canvas.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="vendor/pptxgen.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="assets/pages.js"></script>
+  <script src="assets/fun.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
